@@ -97,6 +97,52 @@ db.my_collection.find()
 ```
  
 ---
+
+##  Collection Operations
+ 
+### Show All Collections
+ 
+```js
+show collections
+```
+ 
+### Create a Collection
+ 
+```js
+db.createCollection("collection_name")
+```
+ 
+### Drop (Delete) a Collection
+ 
+```js
+db.collection_name.drop()
+```
+ 
+### Rename a Collection
+ 
+```js
+db.collection_name.renameCollection("new_collection_name")
+```
+ 
+### Copy a Collection (manual method)
+ 
+```js
+db.old_collection.find().forEach(doc => db.new_collection.insertOne(doc))
+```
+ 
+### Count Documents in a Collection
+ 
+```js
+db.collection_name.countDocuments()
+```
+ 
+### Get Collection Stats
+ 
+```js
+db.collection_name.stats()
+```
+ 
+---
  
 *Made with MongoDB Community Edition · mongosh shell*
  
