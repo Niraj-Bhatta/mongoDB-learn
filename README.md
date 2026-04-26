@@ -30,3 +30,36 @@ This connects to your local MongoDB instance at `mongodb://127.0.0.1:27017` by d
  
 ---
  
+## Step 3 — Select or Create a Database
+ 
+Switch to your target database using:
+ 
+```js
+use database_name
+```
+ 
+Replace `database_name` with your desired name. If the database does not exist, MongoDB will **create it automatically** once data is inserted.
+ 
+> **Note:** The database won't appear in `show dbs` until at least one document has been added to it.
+ 
+---
+ 
+## Step 4 — Create a Collection
+ 
+Collections are like tables in SQL. Create one inside your database with:
+ 
+```js
+db.createCollection("collection_name")
+```
+ 
+Replace `collection_name` with your desired name.
+ 
+On success, MongoDB returns:
+ 
+```json
+{ "ok": 1 }
+```
+ 
+> **Note:** You can also skip this step — MongoDB auto-creates a collection the first time you insert a document into it.
+ 
+---
