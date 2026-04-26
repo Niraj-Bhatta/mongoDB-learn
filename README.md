@@ -63,3 +63,40 @@ On success, MongoDB returns:
 > **Note:** You can also skip this step — MongoDB auto-creates a collection the first time you insert a document into it.
  
 ---
+
+## Useful Follow-up Commands
+ 
+| Command | Description |
+|---|---|
+| `show dbs` | List all databases |
+| `show collections` | List collections in the current database |
+| `db.collection_name.insertOne({ key: "value" })` | Insert your first document |
+| `db.collection_name.find()` | View all documents in a collection |
+| `db.collection_name.drop()` | Delete a collection |
+| `db.dropDatabase()` | Delete the current database |
+ 
+---
+ 
+## Quick Reference
+ 
+```js
+// 1. Connect
+mongosh
+ 
+// 2. Use or create a database
+use my_database
+ 
+// 3. Create a collection
+db.createCollection("my_collection")
+ 
+// 4. Insert a document
+db.my_collection.insertOne({ name: "Niraj", age: 21 })
+ 
+// 5. Query documents
+db.my_collection.find()
+```
+ 
+---
+ 
+*Made with MongoDB Community Edition · mongosh shell*
+ 
