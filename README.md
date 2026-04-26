@@ -143,6 +143,40 @@ db.collection_name.stats()
 ```
  
 ---
+ ####  Insert Documents
  
+### Insert a Single Document
+ 
+```js
+db.collection_name.insertOne({
+  name: "Alice",
+  age: 25,
+  city: "Kathmandu"
+})
+```
+ 
+### Insert Multiple Documents
+ 
+```js
+db.collection_name.insertMany([
+  { name: "Bob", age: 30, city: "Pokhara" },
+  { name: "Carol", age: 22, city: "Lalitpur" },
+  { name: "Dave", age: 28, city: "Bhaktapur" }
+])
+```
+ 
+### Insert with a Custom `_id`
+ 
+```js
+db.collection_name.insertOne({
+  _id: "user_001",
+  name: "Eve",
+  age: 27
+})
+```
+ 
+> **Note:** If `_id` is not provided, MongoDB automatically generates a unique `ObjectId`.
+ 
+---
 *Made with MongoDB Community Edition · mongosh shell*
  
