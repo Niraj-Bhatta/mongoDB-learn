@@ -196,5 +196,43 @@ db.users.find({ age: { $nin: [18, 19] } })        // not in
 // =======================
 
 
+// 🔹 Logical Operators
+// =======================
+db.users.find({
+  $and: [
+    { age: { $gt: 20 } },
+    { city: "Kathmandu" }
+  ]
+})
+
+db.users.find({
+  $or: [
+    { age: 21 },
+    { age: 25 }
+  ]
+})
+
+db.users.find({
+  age: { $not: { $gt: 25 } }
+})
+
+db.users.find({
+  age: { $gt: 20 },
+  city: { $ne: "Pokhara" }
+})
+
+// =======================
+// 🔹 Element Operators
+// =======================
+db.users.find({ email: { $exists: true } })   // field exists
+db.users.find({ age: { $type: "int" } })      // type check
+
+// =======================
+// 🔹 Evaluation Operators
+// =======================
+db.users.find({ name: { $regex: "^N" } })     // starts with N
+db.users.find({ $text: { $search: "developer" } }) // text search
+
+
 *Made with MongoDB Community Edition · mongosh shell*
  
