@@ -234,5 +234,80 @@ db.users.find({ name: { $regex: "^N" } })     // starts with N
 db.users.find({ $text: { $search: "developer" } }) // text search
 
 
+
+// 🔹 Array Operators
+// =======================
+db.users.find({ skills: { $all: ["HTML", "CSS"] } })  // must have all
+db.users.find({ skills: { $size: 2 } })               // array size
+db.users.find({ skills: { $elemMatch: { $eq: "JS" } } }) // match element
+
+// =======================
+// 🔹 Update Operators
+// =======================
+db.users.updateOne(
+  { name: "Niraj" },
+  { $set: { age: 22 } }
+)
+
+db.users.updateOne(
+  { name: "Niraj" },
+  { $inc: { age: 1 } }
+)
+
+db.users.updateOne(
+  { name: "Niraj" },
+  { $unset: { city: "" } }
+)
+
+db.users.updateOne(
+  { name: "Niraj" },
+  { $push: { skills: "MongoDB" } }
+)
+
+db.users.updateOne(
+  { name: "Niraj" },
+  { $pull: { skills: "CSS" } }
+)
+
+// =======================
+// 🔹 Aggregation Operators
+// =======================
+db.users.aggregate([
+  {
+    $group: {
+      _id: "$city",
+      totalUsers: { $sum: 1 },
+      avgAge: { $avg: "$age" },
+      maxAge: { $max: "$age" },
+      minAge: { $min: "$age" }
+    }
+  }
+])
+
+// =======================
+// 🔹 Projection Operators
+// =======================
+db.users.find(
+  {},
+  {
+    name: 1,
+    age: 1,
+    _id: 0
+  }
+)
+
+// =======================
+// 🔹 Sorting & Limiting
+// =======================
+db.users.find().sort({ age: 1 })   // ascending
+db.users.find().sort({ age: -1 })  // descending
+db.users.find().limit(5)
+
+// =======================
+// 🔹 Index Operator
+// =======================
+db.users.createIndex({ name: 1 })
+
+
 *Made with MongoDB Community Edition · mongosh shell*
  
