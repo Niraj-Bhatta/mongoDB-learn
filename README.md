@@ -178,5 +178,23 @@ db.collection_name.insertOne({
 > **Note:** If `_id` is not provided, MongoDB automatically generates a unique `ObjectId`.
  
 ---
+
+// 📘 MongoDB Operators - Combined Reference
+
+// =======================
+// 🔹 Comparison Operators
+// =======================
+db.users.find({ age: { $eq: 21 } })   // equal
+db.users.find({ age: { $ne: 21 } })   // not equal
+db.users.find({ age: { $gt: 20 } })   // greater than
+db.users.find({ age: { $gte: 21 } })  // greater than or equal
+db.users.find({ age: { $lt: 25 } })   // less than
+db.users.find({ age: { $lte: 25 } })  // less than or equal
+db.users.find({ age: { $in: [20, 21, 22] } })     // match any
+db.users.find({ age: { $nin: [18, 19] } })        // not in
+
+// =======================
+
+
 *Made with MongoDB Community Edition · mongosh shell*
  
