@@ -179,25 +179,29 @@ db.collection_name.insertOne({
  
 ---
 
-// 📘 MongoDB Operators - Combined Reference
+# 📘 MongoDB Operators — Combined Reference
 
-// =======================
-// 🔹 Comparison Operators
-// =======================
-db.users.find({ age: { $eq: 21 } })   // equal
-db.users.find({ age: { $ne: 21 } })   // not equal
-db.users.find({ age: { $gt: 20 } })   // greater than
-db.users.find({ age: { $gte: 21 } })  // greater than or equal
-db.users.find({ age: { $lt: 25 } })   // less than
-db.users.find({ age: { $lte: 25 } })  // less than or equal
-db.users.find({ age: { $in: [20, 21, 22] } })     // match any
-db.users.find({ age: { $nin: [18, 19] } })        // not in
+---
 
-// =======================
+## 🔵 Comparison Operators
 
+```js
+db.users.find({ age: { $eq: 21 } })        // equal
+db.users.find({ age: { $ne: 21 } })        // not equal
+db.users.find({ age: { $gt: 20 } })        // greater than
+db.users.find({ age: { $gte: 21 } })       // greater than or equal
+db.users.find({ age: { $lt: 25 } })        // less than
+db.users.find({ age: { $lte: 25 } })       // less than or equal
+db.users.find({ age: { $in: [20, 21, 22] } })   // match any in array
+db.users.find({ age: { $nin: [18, 19] } })      // not in array
+```
 
-// 🔹 Logical Operators
-// =======================
+---
+
+## 🟢 Logical Operators
+
+```js
+// AND — all conditions must match
 db.users.find({
   $and: [
     { age: { $gt: 20 } },
@@ -205,109 +209,115 @@ db.users.find({
   ]
 })
 
+// OR — at least one condition matches
 db.users.find({
-  $or: [
-    { age: 21 },
-    { age: 25 }
-  ]
+  $or: [{ age: 21 }, { age: 25 }]
 })
 
-db.users.find({
-  age: { $not: { $gt: 25 } }
-})
+// NOT — negates a condition
+db.users.find({ age: { $not: { $gt: 25 } } })
 
+// Implicit AND with $ne
 db.users.find({
   age: { $gt: 20 },
   city: { $ne: "Pokhara" }
 })
+```
 
-// =======================
-// 🔹 Element Operators
-// =======================
+---
+
+## 🟣 Element Operators
+
+```js
 db.users.find({ email: { $exists: true } })   // field exists
-db.users.find({ age: { $type: "int" } })      // type check
+db.users.find({ age: { $type: "int" } })      // BSON type check
+```
 
-// =======================
-// 🔹 Evaluation Operators
-// =======================
-db.users.find({ name: { $regex: "^N" } })     // starts with N
-db.users.find({ $text: { $search: "developer" } }) // text search
+---
 
+## 🟡 Evaluation Operators
 
+```js
+db.users.find({ name: { $regex: "^N" } })            // regex match (starts with N)
+db.users.find({ $text: { $search: "developer" } })   // full-text search
+```
 
-// 🔹 Array Operators
-// =======================
-db.users.find({ skills: { $all: ["HTML", "CSS"] } })  // must have all
-db.users.find({ skills: { $size: 2 } })               // array size
-db.users.find({ skills: { $elemMatch: { $eq: "JS" } } }) // match element
+---
 
-// =======================
-// 🔹 Update Operators
-// =======================
-db.users.updateOne(
-  { name: "Niraj" },
-  { $set: { age: 22 } }
-)
+## 🟠 Array Operators
 
-db.users.updateOne(
-  { name: "Niraj" },
-  { $inc: { age: 1 } }
-)
+```js
+db.users.find({ skills: { $all: ["HTML", "CSS"] } })          // must contain all
+db.users.find({ skills: { $size: 2 } })                       // array length equals 2
+db.users.find({ skills: { $elemMatch: { $eq: "JS" } } })      // element-level match
+```
 
-db.users.updateOne(
-  { name: "Niraj" },
-  { $unset: { city: "" } }
-)
+---
 
-db.users.updateOne(
-  { name: "Niraj" },
-  { $push: { skills: "MongoDB" } }
-)
+## 🟩 Update Operators
 
-db.users.updateOne(
-  { name: "Niraj" },
-  { $pull: { skills: "CSS" } }
-)
+```js
+// $set — update a field
+db.users.updateOne({ name: "Niraj" }, { $set: { age: 22 } })
 
-// =======================
-// 🔹 Aggregation Operators
-// =======================
+// $inc — increment a numeric field
+db.users.updateOne({ name: "Niraj" }, { $inc: { age: 1 } })
+
+// $unset — remove a field
+db.users.updateOne({ name: "Niraj" }, { $unset: { city: "" } })
+
+// $push — add element to array
+db.users.updateOne({ name: "Niraj" }, { $push: { skills: "MongoDB" } })
+
+// $pull — remove element from array
+db.users.updateOne({ name: "Niraj" }, { $pull: { skills: "CSS" } })
+```
+
+---
+
+##  Aggregation Operators
+
+```js
 db.users.aggregate([
   {
     $group: {
-      _id: "$city",
+      _id:        "$city",
       totalUsers: { $sum: 1 },
-      avgAge: { $avg: "$age" },
-      maxAge: { $max: "$age" },
-      minAge: { $min: "$age" }
+      avgAge:     { $avg: "$age" },
+      maxAge:     { $max: "$age" },
+      minAge:     { $min: "$age" }
     }
   }
 ])
+```
 
-// =======================
-// 🔹 Projection Operators
-// =======================
-db.users.find(
-  {},
-  {
-    name: 1,
-    age: 1,
-    _id: 0
-  }
-)
+---
 
-// =======================
-// 🔹 Sorting & Limiting
-// =======================
-db.users.find().sort({ age: 1 })   // ascending
-db.users.find().sort({ age: -1 })  // descending
+## ⬛ Projection
+
+```js
+// Include only name and age, exclude _id
+db.users.find({}, { name: 1, age: 1, _id: 0 })
+```
+
+---
+
+## ⬛ Sorting & Limiting
+
+```js
+db.users.find().sort({ age: 1 })    // ascending
+db.users.find().sort({ age: -1 })   // descending
 db.users.find().limit(5)
+```
 
-// =======================
-// 🔹 Index Operator
-// =======================
+---
+
+## ⬛ Index
+
+```js
 db.users.createIndex({ name: 1 })
+```
 
+---
 
 *Made with MongoDB Community Edition · mongosh shell*
- 
