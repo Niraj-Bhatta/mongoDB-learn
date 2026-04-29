@@ -1107,6 +1107,27 @@ db.oldFormat.aggregate([
 
 ---
 
+# MongoDB Operators - Complete Guide
 
+MongoDB operators are used to perform operations on data such as arithmetic calculations, comparisons, logical checks, array handling, and aggregation.
+
+---
+
+## 1. Arithmetic Operators
+
+| Operator   | Description        | Syntax Example |
+|------------|-------------------|----------------|
+| $add       | Addition          | { $add: ["$a", "$b"] } |
+| $subtract  | Subtraction       | { $subtract: ["$a", "$b"] } |
+| $multiply  | Multiplication    | { $multiply: ["$a", "$b"] } |
+| $divide    | Division          | { $divide: ["$a", 2] } |
+| $mod       | Remainder         | { $mod: ["$a", 2] } |
+| $abs       | Absolute value    | { $abs: "$a" } |
+| $ceil      | Round up          | { $ceil: "$a" } |
+| $floor     | Round down        | { $floor: "$a" } |
+| $round     | Round decimal     | { $round: ["$a", 2] } |
+| $trunc     | Remove decimal    | { $trunc: "$a" } |
+
+---
 
 *Made with MongoDB Community Edition · mongosh shell*
