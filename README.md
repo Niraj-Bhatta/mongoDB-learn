@@ -1107,7 +1107,7 @@ db.oldFormat.aggregate([
 
 ---
 
-# MongoDB Operators - Complete Guide
+# MongoDB Operators 
 
 MongoDB operators are used to perform operations on data such as arithmetic calculations, comparisons, logical checks, array handling, and aggregation.
 
