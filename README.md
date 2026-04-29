@@ -679,6 +679,434 @@ const result = await User.aggregate([
 
 ---
 
-*Made with MongoDB Community Edition · mongosh shell*
+# MongoDB Aggregation Operators Guide
+
+This guide covers four powerful MongoDB aggregation pipeline operators: `$facet`, `$fill`, `$merge`, and `$union`.
+
+---
+
+## Table of Contents
+- [$facet](#facet)
+- [$fill](#fill)
+- [$merge](#merge)
+- [$union](#union)
+
+---
+
+## $facet
+
+### Overview
+The `$facet` operator processes multiple aggregation pipelines within a single stage on the same set of input documents. Each sub-pipeline has its own field in the output document and can include any aggregation stages except `$out`, `$merge`, and `$facet` itself.
+
+### Syntax
+```javascript
+{
+  $facet: {
+    <outputField1>: [ <stage1>, <stage2>, ... ],
+    <outputField2>: [ <stage1>, <stage2>, ... ],
+    ...
+  }
+}
+```
+
+### Use Cases
+- Creating multiple views/summaries of the same data in one query
+- Running parallel analytics on the same dataset
+- Generating dashboards with multiple metrics
+- Implementing pagination alongside data aggregation
+
+### Example
+```javascript
+db.products.aggregate([
+  {
+    $facet: {
+      // Get price statistics
+      "priceStats": [
+        {
+          $group: {
+            _id: null,
+            avgPrice: { $avg: "$price" },
+            minPrice: { $min: "$price" },
+            maxPrice: { $max: "$price" }
+          }
+        }
+      ],
+      // Get top 5 products by sales
+      "topProducts": [
+        { $sort: { sales: -1 } },
+        { $limit: 5 },
+        { $project: { name: 1, sales: 1, price: 1 } }
+      ],
+      // Count products by category
+      "categoryCount": [
+        { $group: { _id: "$category", count: { $sum: 1 } } },
+        { $sort: { count: -1 } }
+      ]
+    }
+  }
+])
+```
+
+### Output Structure
+```javascript
+{
+  "priceStats": [ { _id: null, avgPrice: 45.50, minPrice: 10, maxPrice: 200 } ],
+  "topProducts": [ {...}, {...}, {...}, {...}, {...} ],
+  "categoryCount": [ {...}, {...}, {...} ]
+}
+```
+
+### Important Notes
+- Each facet pipeline operates independently on the same input documents
+- Results are returned in arrays, even if only one document is produced
+- Cannot use `$out`, `$merge`, or nested `$facet` within facets
+- Useful for reducing round trips to the database
+
+---
+
+## $fill
+
+### Overview
+The `$fill` operator populates null and missing field values within documents. It's particularly useful for time-series data and handling gaps in sequential data.
+
+### Syntax
+```javascript
+{
+  $fill: {
+    partitionBy: <expression>,          // Optional: partition documents
+    partitionByFields: [ <field1>, ... ], // Alternative to partitionBy
+    sortBy: { <field1>: <sort order>, ... },
+    output: {
+      <field1>: { method: <string>, value: <expression> },
+      <field2>: { method: <string>, value: <expression> },
+      ...
+    }
+  }
+}
+```
+
+### Fill Methods
+- **`locf`** (Last Observation Carried Forward): Uses the last non-null value
+- **`linear`**: Interpolates linearly between known values (numeric fields only)
+- **`value`**: Uses a specified static value
+
+### Use Cases
+- Filling gaps in time-series data
+- Data cleaning and preparation
+- Handling missing sensor readings
+- Creating complete datasets for visualization
+
+### Example 1: Time Series Data
+```javascript
+db.stockPrices.aggregate([
+  {
+    $fill: {
+      sortBy: { date: 1 },
+      output: {
+        price: { method: "locf" },        // Carry forward last price
+        volume: { method: "linear" }       // Interpolate volume
+      }
+    }
+  }
+])
+```
+
+### Example 2: Partitioned Fill
+```javascript
+db.sensorData.aggregate([
+  {
+    $fill: {
+      partitionByFields: [ "sensorId" ],  // Fill separately per sensor
+      sortBy: { timestamp: 1 },
+      output: {
+        temperature: { method: "linear" },
+        status: { method: "value", value: "unknown" }
+      }
+    }
+  }
+])
+```
+
+### Important Notes
+- Requires sorting specification (`sortBy`)
+- `linear` method only works with numeric fields
+- When using `partitionBy`, fill operations apply within each partition
+- Does not create new documents, only fills existing ones
+
+---
+
+## $merge
+
+### Overview
+The `$merge` operator writes the results of an aggregation pipeline into a collection. Unlike `$out`, it can merge results into existing collections with sophisticated merge logic and can target different databases.
+
+### Syntax
+```javascript
+{
+  $merge: {
+    into: <target collection> or { db: <db>, coll: <collection> },
+    on: <identifier field> or [ <field1>, <field2>, ... ],
+    let: <variables>,
+    whenMatched: <action>,
+    whenNotMatched: <action>
+  }
+}
+```
+
+### Actions
+
+**whenMatched:**
+- `replace` (default): Replace the entire document
+- `keepExisting`: Keep the existing document, discard new one
+- `merge`: Merge new fields into existing document
+- `fail`: Raise error if match found
+- `pipeline`: Custom update pipeline
+
+**whenNotMatched:**
+- `insert` (default): Insert new document
+- `discard`: Don't insert
+- `fail`: Raise error
+
+### Use Cases
+- Incrementally updating materialized views
+- Upserting aggregation results
+- Building data warehouses
+- Creating summary tables
+- Maintaining cached/denormalized data
+
+### Example 1: Basic Merge
+```javascript
+db.sales.aggregate([
+  {
+    $group: {
+      _id: "$productId",
+      totalSales: { $sum: "$amount" },
+      count: { $sum: 1 }
+    }
+  },
+  {
+    $merge: {
+      into: "productSummary",
+      on: "_id",
+      whenMatched: "replace",
+      whenNotMatched: "insert"
+    }
+  }
+])
+```
+
+### Example 2: Merge with Pipeline
+```javascript
+db.dailySales.aggregate([
+  {
+    $group: {
+      _id: { product: "$productId", date: "$date" },
+      dailyTotal: { $sum: "$amount" }
+    }
+  },
+  {
+    $merge: {
+      into: "salesSummary",
+      on: "_id",
+      whenMatched: [
+        { $set: { 
+            dailyTotal: "$dailyTotal",
+            lastUpdated: "$$NOW"
+          }
+        }
+      ],
+      whenNotMatched: "insert"
+    }
+  }
+])
+```
+
+### Example 3: Merge to Different Database
+```javascript
+db.events.aggregate([
+  { $match: { status: "processed" } },
+  {
+    $merge: {
+      into: { db: "analytics", coll: "processedEvents" },
+      on: "_id",
+      whenMatched: "replace",
+      whenNotMatched: "insert"
+    }
+  }
+])
+```
+
+### Important Notes
+- Must be the last stage in the pipeline
+- Target collection is created if it doesn't exist
+- Can merge to sharded collections
+- Supports transactions
+- More flexible than `$out` for incremental updates
+
+---
+
+## $union
+
+### Overview
+The `$union` operator combines documents from multiple collections into a single result set. It performs a union operation similar to SQL UNION ALL (includes duplicates).
+
+### Syntax
+```javascript
+{
+  $union: {
+    coll: <collection name>,
+    pipeline: [ <stage1>, <stage2>, ... ]  // Optional
+  }
+}
+```
+
+Or shorthand:
+```javascript
+{ $union: <collection name> }
+```
+
+### Use Cases
+- Combining data from multiple related collections
+- Merging historical and current data
+- Aggregating across collection partitions
+- Creating unified views of distributed data
+
+### Example 1: Basic Union
+```javascript
+db.currentOrders.aggregate([
+  {
+    $union: {
+      coll: "archivedOrders"
+    }
+  },
+  {
+    $group: {
+      _id: "$customerId",
+      totalOrders: { $sum: 1 },
+      totalAmount: { $sum: "$amount" }
+    }
+  }
+])
+```
+
+### Example 2: Union with Pipeline
+```javascript
+db.sales2023.aggregate([
+  {
+    $union: {
+      coll: "sales2024",
+      pipeline: [
+        { $match: { status: "completed" } },
+        { $project: { _id: 1, amount: 1, date: 1, product: 1 } }
+      ]
+    }
+  },
+  {
+    $group: {
+      _id: "$product",
+      totalRevenue: { $sum: "$amount" }
+    }
+  },
+  { $sort: { totalRevenue: -1 } }
+])
+```
+
+### Example 3: Multiple Unions
+```javascript
+db.products_usa.aggregate([
+  { $union: { coll: "products_europe" } },
+  { $union: { coll: "products_asia" } },
+  {
+    $group: {
+      _id: "$category",
+      globalInventory: { $sum: "$stock" }
+    }
+  }
+])
+```
+
+### Example 4: Union with Field Standardization
+```javascript
+db.oldFormat.aggregate([
+  {
+    $project: {
+      customerId: "$customer_id",
+      orderDate: "$date",
+      total: "$amount"
+    }
+  },
+  {
+    $union: {
+      coll: "newFormat",
+      pipeline: [
+        {
+          $project: {
+            customerId: 1,
+            orderDate: 1,
+            total: 1
+          }
+        }
+      ]
+    }
+  }
+])
+```
+
+### Important Notes
+- Includes all documents, including duplicates (like SQL UNION ALL)
+- Does not automatically remove duplicates (use `$group` if needed)
+- Collections must be in the same database
+- Can apply transformation pipelines to unioned collections
+- More efficient than multiple queries with application-level merging
+
+---
+
+## Comparison Matrix
+
+| Operator | Primary Purpose | Creates Output? | Multi-Collection? | Position in Pipeline |
+|----------|----------------|-----------------|-------------------|---------------------|
+| `$facet` | Multiple parallel pipelines on same data | No | No | Any (except last) |
+| `$fill` | Fill missing/null values | No | No | Any |
+| `$merge` | Write results to collection | Yes | Yes (across DBs) | Must be last |
+| `$union` | Combine multiple collections | No | Yes (same DB) | Any |
+
+---
+
+## Best Practices
+
+### $facet
+- Keep facet pipelines simple to avoid performance issues
+- Use when you need multiple analytics in a single query
+- Consider memory limits when processing large datasets
+
+### $fill
+- Always specify `sortBy` for predictable results
+- Use `partitionBy` when data should be filled separately by group
+- Test `linear` interpolation carefully with your data distribution
+
+### $merge
+- Use `on` field that has a unique index for better performance
+- Prefer `merge` action over `replace` when only updating specific fields
+- Consider transaction requirements for consistency
+
+### $union
+- Ensure collections have compatible schemas
+- Use pipelines to standardize fields before union
+- Consider indexing for better performance on large unions
+- Remember it includes duplicates by default
+
+---
+
+## Performance Considerations
+
+1. **Indexing**: Ensure proper indexes on fields used in `$match`, `$sort`, and `$merge` on clauses
+2. **Memory**: `$facet` can be memory-intensive; monitor usage
+3. **Disk Usage**: `$merge` and large `$union` operations may require disk space
+4. **Execution Order**: Place filtering stages (`$match`) early in pipelines
+5. **Sharding**: All operators work with sharded collections, but consider data distribution
+
+---
+
+
 
 *Made with MongoDB Community Edition · mongosh shell*
