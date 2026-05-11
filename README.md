@@ -1130,4 +1130,36 @@ MongoDB operators are used to perform operations on data such as arithmetic calc
 
 ---
 
+## 🆔 Type Operators
+Type operators allow you to query data based on its BSON type (e.g., string, integer, object).
+
+### The `$type` Operator
+Matches documents where the BSON type of the field matches the type(s) passed to the operator.
+
+| Type Name | Number | Alias |
+| :--- | :--- | :--- |
+| **Double** | 1 | "double" |
+| **String** | 2 | "string" |
+| **Object** | 3 | "object" |
+| **Array** | 4 | "array" |
+| **Binary data** | 5 | "binData" |
+| **ObjectId** | 7 | "objectId" |
+| **Boolean** | 8 | "bool" |
+| **Date** | 9 | "date" |
+| **Null** | 10 | "null" |
+| **Regular Expression** | 11 | "regex" |
+| **32-bit integer** | 16 | "int" |
+| **Timestamp** | 17 | "timestamp" |
+| **64-bit integer** | 18 | "long" |
+| **Decimal128** | 19 | "decimal" |
+
+---
+
+### 🚀 Type Usage Examples
+
+#### Query by String Alias
+Find all documents where the `zipCode` field is stored as a **string** rather than a number:
+```javascript
+db.users.find({ zipCode: { $type: "string" } })
+
 *Made with MongoDB Community Edition · mongosh shell*
