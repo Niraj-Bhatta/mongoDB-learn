@@ -1536,6 +1536,317 @@ db.runCommand({ collMod: "logs", cappedSize: 52428800 })
 
 ---
 
+# 📚 MongoDB Indexes
+
+<div align="center">
+
+![MongoDB](https://img.shields.io/badge/Database-MongoDB-green?style=for-the-badge&logo=mongodb)
+
+### 🚀 Complete Guide to MongoDB Indexes
+
+</div>
+
+---
+
+# 📌 What is an Index in MongoDB?
+
+An **Index** in MongoDB is a special data structure that improves the speed of data retrieval operations.
+
+Without indexes, MongoDB scans every document in the collection, which is slower.
+
+✅ Faster Searching  
+✅ Faster Sorting  
+✅ Better Query Performance  
+
+---
+
+# 🛠 Syntax of Creating Index
+
+```js
+db.collection.createIndex({ fieldName: 1 })
+```
+
+### Explanation
+
+| Value | Meaning |
+|------|------|
+| `1` | Ascending Order |
+| `-1` | Descending Order |
+
+---
+
+# 📂 Sample Collection
+
+```js
+db.students.insertMany([
+  { name: "Ram", age: 20, department: "BCA", marks: 80 },
+  { name: "Shyam", age: 22, department: "BIM", marks: 75 },
+  { name: "Hari", age: 21, department: "BCA", marks: 90 }
+])
+```
+
+---
+
+# 1️⃣ Single Field Index
+
+## 📌 Description
+Creates an index on a single field.
+
+## 🛠 Syntax
+
+```js
+db.students.createIndex({ name: 1 })
+```
+
+## ✅ Example
+
+```js
+db.students.find({ name: "Ram" })
+```
+
+## 📖 Use
+Used to speed up searching by one field.
+
+---
+
+# 2️⃣ Compound Index
+
+## 📌 Description
+Creates an index on multiple fields.
+
+## 🛠 Syntax
+
+```js
+db.students.createIndex({ department: 1, marks: -1 })
+```
+
+## ✅ Example
+
+```js
+db.students.find({
+  department: "BCA",
+  marks: { $gt: 80 }
+})
+```
+
+## 📖 Use
+Used when queries involve multiple fields.
+
+---
+
+# 3️⃣ Unique Index
+
+## 📌 Description
+Ensures all values in the indexed field are unique.
+
+## 🛠 Syntax
+
+```js
+db.students.createIndex(
+  { email: 1 },
+  { unique: true }
+)
+```
+
+## ✅ Example
+
+```js
+db.students.insertOne({
+  email: "ram@gmail.com"
+})
+```
+
+## 📖 Use
+Prevents duplicate values.
+
+---
+
+# 4️⃣ Text Index
+
+## 📌 Description
+Used for text searching.
+
+## 🛠 Syntax
+
+```js
+db.students.createIndex({ name: "text" })
+```
+
+## ✅ Example
+
+```js
+db.students.find({
+  $text: { $search: "Ram" }
+})
+```
+
+## 📖 Use
+Used for searching words or sentences.
+
+---
+
+# 5️⃣ Sparse Index
+
+## 📌 Description
+Indexes only documents that contain the indexed field.
+
+## 🛠 Syntax
+
+```js
+db.students.createIndex(
+  { phone: 1 },
+  { sparse: true }
+)
+```
+
+## ✅ Example
+
+```js
+db.students.find({ phone: 9800000000 })
+```
+
+## 📖 Use
+Saves storage space when some documents do not contain the field.
+
+---
+
+# 6️⃣ TTL Index (Time To Live)
+
+## 📌 Description
+Automatically deletes documents after a specified time.
+
+## 🛠 Syntax
+
+```js
+db.sessions.createIndex(
+  { createdAt: 1 },
+  { expireAfterSeconds: 3600 }
+)
+```
+
+## ✅ Example
+
+```js
+db.sessions.insertOne({
+  user: "Ram",
+  createdAt: new Date()
+})
+```
+
+## 📖 Use
+Used for temporary data like sessions or OTPs.
+
+---
+
+# 7️⃣ Hashed Index
+
+## 📌 Description
+Indexes hashed values of a field.
+
+## 🛠 Syntax
+
+```js
+db.students.createIndex({ name: "hashed" })
+```
+
+## ✅ Example
+
+```js
+db.students.find({ name: "Ram" })
+```
+
+## 📖 Use
+Used in sharding for even data distribution.
+
+---
+
+# 8️⃣ Wildcard Index
+
+## 📌 Description
+Indexes all fields in documents.
+
+## 🛠 Syntax
+
+```js
+db.students.createIndex({ "$**": 1 })
+```
+
+## ✅ Example
+
+```js
+db.students.find({ age: 20 })
+```
+
+## 📖 Use
+Useful when document fields are dynamic.
+
+---
+
+# 📋 View All Indexes
+
+```js
+db.students.getIndexes()
+```
+
+---
+
+# ❌ Drop an Index
+
+## Drop Specific Index
+
+```js
+db.students.dropIndex({ name: 1 })
+```
+
+## Drop All Indexes
+
+```js
+db.students.dropIndexes()
+```
+
+---
+
+# ⚡ Advantages of Indexes
+
+- Faster Query Execution
+- Improves Sorting Performance
+- Efficient Searching
+- Reduces Query Time
+- Better Performance for Large Data
+
+---
+
+# ⚠️ Disadvantages of Indexes
+
+- Takes Extra Storage
+- Slows Down Insert/Update Operations
+- Too Many Indexes Reduce Performance
+
+---
+
+# 🧠 Important Points
+
+| Point | Description |
+|------|------|
+| `_id` Field | MongoDB automatically creates index on `_id` |
+| Multiple Indexes | Allowed in one collection |
+| Query Optimization | Indexes improve query speed |
+| Storage | Indexes require extra memory |
+
+---
+
+# 🎯 Conclusion
+
+MongoDB Indexes are used to improve database performance by making data retrieval faster and more efficient. Different types of indexes are used for different purposes like searching, sorting, uniqueness, and automatic deletion of documents.
+
+---
+
+<div align="center">
+
+## ⭐ MongoDB Indexes Cheat Sheet ⭐
+
+</div>
+
 **Learn More:** [MongoDB Capped Collections Documentation](https://docs.mongodb.com/manual/core/capped-collections/)
 
 *Made with MongoDB Community Edition · mongosh shell*
