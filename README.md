@@ -1162,4 +1162,380 @@ Find all documents where the `zipCode` field is stored as a **string** rather th
 ```javascript
 db.users.find({ zipCode: { $type: "string" } })
 
+# MongoDB Capped Collections
+
+A fixed-size collection that automatically overwrites old documents when it reaches its size limit. Perfect for logs, events, and high-throughput scenarios.
+
+## Quick Start
+
+```javascript
+// Create a capped collection
+db.createCollection("logs", {
+  capped: true,
+  size: 1048576  // 1 MB
+})
+
+// Insert documents
+db.logs.insertOne({ timestamp: new Date(), message: "App started" })
+
+// Query documents
+db.logs.find().limit(10)
+
+// Check if capped
+db.logs.isCapped()  // true
+```
+
+---
+
+## Creating Capped Collections
+
+### Basic Creation
+```javascript
+db.createCollection("logs", {
+  capped: true,
+  size: 1048576  // in bytes
+})
+```
+
+### With Document Limit
+```javascript
+db.createCollection("events", {
+  capped: true,
+  size: 5242880,  // 5 MB
+  max: 1000       // max documents
+})
+```
+
+### With Validation
+```javascript
+db.createCollection("audit_logs", {
+  capped: true,
+  size: 10485760,
+  max: 5000,
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["timestamp", "action"],
+      properties: {
+        timestamp: { bsonType: "date" },
+        action: { bsonType: "string" }
+      }
+    }
+  }
+})
+```
+
+---
+
+## Common Operations
+
+### Insert
+```javascript
+// Single document
+db.logs.insertOne({ timestamp: new Date(), level: "info", msg: "Started" })
+
+// Multiple documents
+db.logs.insertMany([
+  { timestamp: new Date(), level: "info", msg: "User logged in" },
+  { timestamp: new Date(), level: "error", msg: "Query failed" }
+])
+```
+
+### Query
+```javascript
+// All documents
+db.logs.find()
+
+// Filter
+db.logs.find({ level: "error" })
+
+// Recent entries (reverse order)
+db.logs.find().sort({ $natural: -1 }).limit(10)
+
+// Oldest first
+db.logs.find().sort({ $natural: 1 })
+```
+
+### Watch for New Data
+```javascript
+// Using changeStreams (MongoDB 4.0+)
+const changeStream = db.logs.watch()
+changeStream.on('change', (change) => {
+  console.log('New entry:', change.fullDocument)
+})
+```
+
+### Update
+```javascript
+// Update (must be same size)
+db.logs.updateOne(
+  { _id: ObjectId("...") },
+  { $set: { processed: true } }
+)
+```
+
+### Delete
+```javascript
+// Cannot delete individual documents
+db.logs.deleteOne({ _id: ObjectId("...") })  // ❌ Error!
+
+// Clear entire collection
+db.logs.drop()
+
+// Drop and recreate
+db.logs.drop()
+db.createCollection("logs", { capped: true, size: 1048576 })
+```
+
+### Check Status
+```javascript
+// Is collection capped?
+db.logs.isCapped()  // true
+
+// View stats
+db.logs.stats()
+
+// View collection info
+db.getCollectionInfos({ name: "logs" })
+
+// All capped collections
+db.getCollectionInfos({ capped: true })
+```
+
+---
+
+## Real-World Examples
+
+### Application Logs
+```javascript
+db.createCollection("app_logs", {
+  capped: true,
+  size: 52428800,  // 50 MB
+  max: 50000
+})
+
+// Insert log entry
+db.app_logs.insertOne({
+  timestamp: new Date(),
+  level: "error",
+  service: "api",
+  message: "Request timeout"
+})
+
+// Get recent errors
+db.app_logs.find({ level: "error" }).sort({ $natural: -1 }).limit(10)
+```
+
+### Event Stream
+```javascript
+db.createCollection("events", {
+  capped: true,
+  size: 104857600,  // 100 MB
+  max: 10000
+})
+
+// Insert event
+db.events.insertOne({
+  timestamp: new Date(),
+  userId: "user123",
+  action: "purchase",
+  amount: 99.99
+})
+
+// Watch for new events
+const stream = db.events.watch()
+stream.on('change', (change) => {
+  console.log('New event:', change.fullDocument)
+})
+```
+
+### Audit Trail
+```javascript
+db.createCollection("audit_log", {
+  capped: true,
+  size: 1073741824,  // 1 GB
+  max: 100000
+})
+
+db.audit_log.insertOne({
+  timestamp: new Date(),
+  action: "UPDATE",
+  userId: "admin",
+  resource: "user:456",
+  changes: { status: { old: "active", new: "suspended" } }
+})
+```
+
+### Metrics
+```javascript
+db.createCollection("metrics", {
+  capped: true,
+  size: 262144000,  // 250 MB
+  max: 1000000
+})
+
+db.metrics.createIndex({ timestamp: 1 })
+
+db.metrics.insertMany([
+  { timestamp: new Date(), metric: "cpu", value: 45.2 },
+  { timestamp: new Date(), metric: "memory", value: 62.8 }
+])
+
+db.metrics.find({ metric: "cpu" }).sort({ $natural: -1 }).limit(100)
+```
+
+---
+
+## Size Reference
+
+| Size | Bytes | Use Case |
+|------|-------|----------|
+| 1 MB | `1048576` | Testing, small logs |
+| 10 MB | `10485760` | Development |
+| 50 MB | `52428800` | Production logs |
+| 100 MB | `104857600` | High-volume events |
+| 1 GB | `1073741824` | Audit trails |
+
+---
+
+## Key Features
+
+| Feature | Status |
+|---------|--------|
+| Fixed size | ✓ |
+| Auto cleanup | ✓ |
+| Insertion order | ✓ |
+| High performance | ✓ |
+| No index needed | ✓ |
+| Can delete docs | ✗ |
+| Can update docs | ⚠ (limited) |
+| Can shard | ✗ |
+
+---
+
+## Advantages & Disadvantages
+
+### ✅ Advantages
+- High insertion throughput
+- Automatic cleanup of old data
+- Maintains insertion order naturally
+- Predictable memory usage
+- Great for logs & events
+
+### ❌ Limitations
+- Cannot delete individual documents
+- Updates limited by document size
+- Cannot shard collection
+- Serialized writes (slower concurrent access)
+- Hard to convert to regular collection
+
+---
+
+## Best Practices
+
+### 1. Size Calculation
+```
+1000 documents/day × 2 KB = 2 MB/day
+30 days retention = 60 MB
+Add 20% buffer = 72 MB size
+```
+
+### 2. Monitor Growth
+```javascript
+db.logs.stats().size   // Current size
+db.logs.stats().count  // Document count
+```
+
+### 3. Use Both Limits
+```javascript
+db.createCollection("logs", {
+  capped: true,
+  size: 52428800,  // Size limit
+  max: 50000       // Document limit
+})
+```
+
+### 4. Index Wisely
+```javascript
+db.logs.createIndex({ level: 1 })
+db.logs.createIndex({ timestamp: -1 })
+db.logs.createIndex({ service: 1, timestamp: -1 })
+```
+
+### 5. Consider TTL Alternative
+```javascript
+// Regular collection with auto-delete after 30 days
+db.logs.createIndex(
+  { timestamp: 1 },
+  { expireAfterSeconds: 2592000 }
+)
+```
+
+---
+
+## Use Cases
+
+### ✓ Good For
+- Application logs
+- System logs
+- Real-time events
+- Audit trails
+- Chat history (recent)
+- Activity feeds
+- Performance metrics
+- Cache with eviction
+
+### ✗ Not For
+- Financial records
+- Legal documents
+- User data (needs updates)
+- Inventory
+- Data requiring sharding
+- Complex transactions
+
+---
+
+## Useful Commands
+
+```javascript
+// Create
+db.createCollection("logs", { capped: true, size: 1048576 })
+
+// Insert
+db.logs.insertOne({ timestamp: new Date(), msg: "test" })
+
+// Query
+db.logs.find().limit(10)
+
+// Watch
+db.logs.watch().on('change', (change) => { ... })
+
+// Update
+db.logs.updateOne({ _id: ObjectId("...") }, { $set: { x: 1 } })
+
+// Clear
+db.logs.drop()
+
+// Check
+db.logs.isCapped()
+
+// Stats
+db.logs.stats()
+
+// Resize (v6.0+)
+db.runCommand({ collMod: "logs", cappedSize: 52428800 })
+```
+
+---
+
+## MongoDB Version Support
+
+- Capped collections available in all MongoDB versions
+- Resize feature available in MongoDB 6.0+
+- ChangeStreams (watch) available in MongoDB 4.0+
+
+---
+
+**Learn More:** [MongoDB Capped Collections Documentation](https://docs.mongodb.com/manual/core/capped-collections/)
+
 *Made with MongoDB Community Edition · mongosh shell*
